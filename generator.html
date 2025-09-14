@@ -2,42 +2,73 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Generátor čárových kódů</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 20px; }
-    input, button { padding: 10px; margin: 10px; font-size: 1rem; }
     #barcode { margin-top: 20px; }
+    input, button { padding: 10px; margin: 5px; }
   </style>
 </head>
 <body>
   <h1>Generátor čárových kódů</h1>
-  <input type="text" id="codeInput" placeholder="Zadej ID">
-  <input type="number" id="expiryInput" placeholder="Platnost (minuty)">
-  <br>
-  <button onclick="generateBarcode()">Vygenerovat a uložit</button>
-  <svg id="barcode"></svg>
 
- <script>
-document.getElementById("saveButton").addEventListener("click", async () => {
-  const novyKod = document.getElementById("codeInput").value;
-  const data = { code: novyKod, created: new Date().toISOString() };
+  <input type="text" id="codeInput" placeholder="Zadej kód nebo nech prázdné pro náhodný">
+  <button id="generateButton">Vygenerovat</button>
+  <button id="saveButton">Uložit</button>
 
-  const response = await fetch("http://carove-kody.javan.cz/save.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  });
+  <div>
+    <svg id="barcode"></svg>
+  </div>
 
-  if (response.ok) {
-    alert("Uloženo!");
-  } else {
-    alert("Chyba při ukládání");
-  }
-});
-</script>
+  <script>
+    let lastCode = "";
 
+    document.getElementById("generateButton").addEventListener("click", () => {
+      // pokud uživatel nezadal kód, vygenerujeme náhodný
+      let code = document.getElementById("codeInput").value;
+      if (!code) {
+        code = Math.floor(Math.random() * 1000000000).toString();
+        document.getElementById("codeInput").value = code;
+      }
+
+      lastCode = code;
+
+      // vykreslíme čárový kód do <svg>
+      JsBarcode("#barcode", code, {
+        format: "CODE128",
+        lineColor: "#000",
+        width: 2,
+        height: 50,
+        displayValue: true
+      });
+    });
+
+    document.getElementById("saveButton").addEventListener("click", async () => {
+      if (!lastCode) {
+        alert("Nejdřív vygeneruj kód!");
+        return;
+      }
+
+      const data = { code: lastCode, created: new Date().toISOString() };
+
+      try {
+        const response = await fetch("https://carove-kody.javan.cz/save.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          alert("Kód uložen!");
+        } else {
+          alert("Chyba při ukládání!");
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Nepodařilo se spojit se serverem.");
+      }
+    });
+  </script>
 </body>
 </html>
-
