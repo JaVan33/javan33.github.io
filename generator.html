@@ -58,7 +58,7 @@
       const data = { code: lastCode, created: new Date().toISOString() };
 
       try {
-        const response = await fetch("https://carove-kody.javan.cz/save.php", {
+        const response = await fetch("http://carove-kody.javan.cz/save.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)
@@ -77,4 +77,5 @@
   </script>
 </body>
 </html>
+
 
