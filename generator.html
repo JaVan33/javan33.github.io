@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generátor čárových kódů</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    input, button { padding: 10px; margin: 10px; font-size: 1rem; }
+    #barcode { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Generátor čárových kódů</h1>
+  <input type="text" id="codeInput" placeholder="Zadej ID">
+  <input type="number" id="expiryInput" placeholder="Platnost (minuty)">
+  <br>
+  <button onclick="generateBarcode()">Vygenerovat</button>
+  <svg id="barcode"></svg>
+
+  <script>
+    function generateBarcode() {
+      const id = document.getElementById("codeInput").value.trim();
+      const mins = parseInt(document.getElementById("expiryInput").value);
+      if (!id) return alert("Zadej ID!");
+      if (!mins || mins <= 0) return alert("Zadej platnost v minutách!");
+
+      // Spočítat expiraci
+      const exp = Math.floor(Date.now() / 1000) + mins * 60;
+
+      // Vygenerovat čárový kód
+      JsBarcode("#barcode", id, { format: "code128", lineColor: "#000", width: 2, height: 50, displayValue: true });
+
+      // Uložit do "databáze" (localStorage)
+      let data = JSON.parse(localStorage.getItem("codes") || "[]");
+      data.push({ id, exp });
+      localStorage.setItem("codes", JSON.stringify(data));
+
+      alert("Kód uložen! Platný do: " + new Date(exp * 1000).toLocaleString());
+    }
+  </script>
+</body>
+</html>
