@@ -19,35 +19,25 @@
   <button onclick="generateBarcode()">Vygenerovat a uložit</button>
   <svg id="barcode"></svg>
 
-  <script>
-    async function generateBarcode() {
-      const id = document.getElementById("codeInput").value.trim();
-      const mins = parseInt(document.getElementById("expiryInput").value);
-      if (!id) return alert("Zadej ID!");
-      if (!mins || mins <= 0) return alert("Zadej platnost v minutách!");
+ <script>
+document.getElementById("saveButton").addEventListener("click", async () => {
+  const novyKod = document.getElementById("codeInput").value;
+  const data = { code: novyKod, created: new Date().toISOString() };
 
-      const exp = Math.floor(Date.now() / 1000) + mins * 60;
+  const response = await fetch("http://carove-kody.javan.cz/save.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
 
-      // Vygenerovat čárový kód na obrazovku
-      JsBarcode("#barcode", id, { format: "code128", lineColor: "#000", width: 2, height: 50, displayValue: true });
+  if (response.ok) {
+    alert("Uloženo!");
+  } else {
+    alert("Chyba při ukládání");
+  }
+});
+</script>
 
-      // Odeslat na server
-      try {
-        const res = await fetch("save.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, exp })
-        });
-        const data = await res.json();
-        if (data.success) {
-          alert("Kód uložen! Platný do: " + new Date(exp * 1000).toLocaleString());
-        } else {
-          alert("Chyba při ukládání: " + data.error);
-        }
-      } catch (err) {
-        alert("Nepodařilo se spojit se serverem: " + err);
-      }
-    }
-  </script>
 </body>
 </html>
+
