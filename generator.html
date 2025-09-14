@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
@@ -16,28 +16,37 @@
   <input type="text" id="codeInput" placeholder="Zadej ID">
   <input type="number" id="expiryInput" placeholder="Platnost (minuty)">
   <br>
-  <button onclick="generateBarcode()">Vygenerovat</button>
+  <button onclick="generateBarcode()">Vygenerovat a uložit</button>
   <svg id="barcode"></svg>
 
   <script>
-    function generateBarcode() {
+    async function generateBarcode() {
       const id = document.getElementById("codeInput").value.trim();
       const mins = parseInt(document.getElementById("expiryInput").value);
       if (!id) return alert("Zadej ID!");
       if (!mins || mins <= 0) return alert("Zadej platnost v minutách!");
 
-      // Spočítat expiraci
       const exp = Math.floor(Date.now() / 1000) + mins * 60;
 
-      // Vygenerovat čárový kód
+      // Vygenerovat čárový kód na obrazovku
       JsBarcode("#barcode", id, { format: "code128", lineColor: "#000", width: 2, height: 50, displayValue: true });
 
-      // Uložit do "databáze" (localStorage)
-      let data = JSON.parse(localStorage.getItem("codes") || "[]");
-      data.push({ id, exp });
-      localStorage.setItem("codes", JSON.stringify(data));
-
-      alert("Kód uložen! Platný do: " + new Date(exp * 1000).toLocaleString());
+      // Odeslat na server
+      try {
+        const res = await fetch("save.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, exp })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert("Kód uložen! Platný do: " + new Date(exp * 1000).toLocaleString());
+        } else {
+          alert("Chyba při ukládání: " + data.error);
+        }
+      } catch (err) {
+        alert("Nepodařilo se spojit se serverem: " + err);
+      }
     }
   </script>
 </body>
