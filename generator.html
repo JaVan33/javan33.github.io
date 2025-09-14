@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Generátor čárových kódů</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-
   <style>
     body { font-family: sans-serif; text-align: center; padding: 20px; }
     #barcode { margin-top: 20px; }
@@ -26,23 +25,27 @@
     let lastCode = "";
 
     document.getElementById("generateButton").addEventListener("click", () => {
-      // pokud uživatel nezadal kód, vygenerujeme náhodný
       let code = document.getElementById("codeInput").value;
       if (!code) {
         code = Math.floor(Math.random() * 1000000000).toString();
         document.getElementById("codeInput").value = code;
       }
 
+      console.log("[DEBUG] Generuji kod:", code);
       lastCode = code;
 
-      // vykreslíme čárový kód do <svg>
-      JsBarcode("#barcode", code, {
-        format: "CODE128",
-        lineColor: "#000",
-        width: 2,
-        height: 50,
-        displayValue: true
-      });
+      try {
+        JsBarcode("#barcode", code, {
+          format: "CODE128",
+          lineColor: "#000",
+          width: 2,
+          height: 50,
+          displayValue: true
+        });
+        console.log("[DEBUG] Kód vygenerován!");
+      } catch (e) {
+        console.error("[ERROR] Problém při generování čárového kódu:", e);
+      }
     });
 
     document.getElementById("saveButton").addEventListener("click", async () => {
@@ -51,6 +54,7 @@
         return;
       }
 
+      console.log("[DEBUG] Ukládám kód na server:", lastCode);
       const data = { code: lastCode, created: new Date().toISOString() };
 
       try {
@@ -73,4 +77,3 @@
   </script>
 </body>
 </html>
-
