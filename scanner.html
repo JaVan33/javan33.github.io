@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
@@ -19,19 +19,24 @@
   <div id="result" class="result"></div>
 
   <script>
-    function checkCode(scanned) {
-      const data = JSON.parse(localStorage.getItem("codes") || "[]");
+    async function fetchCodes() {
+      try {
+        const res = await fetch("data.json?nocache=" + Date.now());
+        return await res.json();
+      } catch (err) {
+        console.error("Nepodařilo se načíst data.json", err);
+        return [];
+      }
+    }
+
+    async function checkCode(scanned) {
+      const data = await fetchCodes();
       const now = Math.floor(Date.now() / 1000);
 
       const found = data.find(entry => entry.id === scanned);
-      if (!found) {
-        showResult("❌ Kód nenalezen", false);
-        return;
-      }
-      if (found.exp < now) {
-        showResult("⏳ Kód expiroval", false);
-        return;
-      }
+      if (!found) return showResult("❌ Kód nenalezen", false);
+      if (found.exp < now) return showResult("⏳ Kód expiroval", false);
+
       showResult("✅ Kód platný!", true);
     }
 
